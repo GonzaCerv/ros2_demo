@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+"""
+Author:     Diego Maldonado (@dmnunez1993)
+Maintainer: Emiliano Borghi (@eborghi10)
+"""
+
+import argparse
+import subprocess
+import docker_utils as ut
+import os
+
+IMAGE_NAME = "knapp_challenge"
+WS_NAME    = "ws"
+
+def run_dev_environment(command, ros="foxy"):
+    user_docker = "docker"
+    docker_args = []
+    dockerfile  = "ros_{}".format(ros)
+
+    docker_args.append("-it")
+    docker_args.append("--rm")
+    docker_args.append("--env=\"DISPLAY\"")
+    docker_args.append("--volume=\"/tmp/.X11-unix:/tmp/.X11-unix:rw\"")
+    docker_args.append("--volume=\"$HOME/.Xauthority:/root/.Xauthority:rw\"")
+    docker_args.append("--name=\"{}\"".format(IMAGE_NAME))
+    docker_args.append("--privileged")
+    docker_args.append("--network=\"host\"")
+    docker_args.append("--user {0}:{0}".format(ut.get_uid()))
+
+    # Mount workspace
+    docker_args.append("--volume {}/src/:/home/{}/{}/src:rw".format(os.path.dirname(ut.get_repo_path()), user_docker, WS_NAME))
+
+    # VSCode needs HOME to be defined in order to work in the container
+    docker_args.append("-e HOME=/home/{}".format(user_docker))
+
+    # To allow installing packages
+    docker_args.append("--group-add=sudo")
+
+    docker_args.append("-e ROS_HOSTNAME=localhost")
+    docker_args.append("-e ROS_MASTER_URI=http://localhost:11311")
+
+    # Join arguments together separated by a space
+    docker_args = ' '.join(docker_args)
+    docker_command = "docker run {} {} {}".format(docker_args, dockerfile, command)
+
+    ut.run_command("xhost +local:root")
+    ut.run_command(docker_command)
+    ut.run_command("xhost -local:root")
+
+def attach_dev_environment(command):
+    command = 'docker exec -it --user {0}:{0} {1} {2}'.format(ut.get_uid(), IMAGE_NAME, command)
+    ut.run_command(command)
+
+def is_running():
+    command = 'docker ps | grep {} > /dev/null'.format(IMAGE_NAME)
+    try:
+        subprocess.check_call(command, shell=True)
+    except Exception:
+        return False
+
+    return True
+
+def main():
+    # Parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--cmd', dest='command', default='bash')
+    parser.add_argument('-r', '--ros', dest="ros_version", default="foxy")
+    args = parser.parse_args()
+
+    if not is_running():
+        run_dev_environment(args.command, ros=args.ros_version)
+    else:
+        attach_dev_environment(args.command)
+
+if __name__ == '__main__':
+    main()
