@@ -1,6 +1,7 @@
-# ROS Melodic + Gazebo 9 on Docker
+# ROS Foxy
 
 ## Step 1: Install Docker
+
 [Install docker](https://docs.docker.com/engine/installation/linux/ubuntu/) and [configure after postintalling it](https://docs.docker.com/install/linux/linux-postinstall/).
 
 To run docker without super user:
@@ -13,14 +14,14 @@ To run docker without super user:
 
 ## Step 2: Use NVIDIA acceleration
 
-### Install [nvidia-docker2](https://github.com/nvidia/nvidia-docker/wiki/Installation-(version-2.0))
+### Install [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker/tree/v2.6.0)
 
 #### Prerequisites
 
 1. GNU/Linux x86_64 with kernel version > 3.10
-2. Docker >= 1.12
-3. NVIDIA GPU with Architecture > Fermi (2.1)
-4. NVIDIA drivers ~= 361.93 (untested on older versions)
+2. Docker >= 19.03
+3. NVIDIA GPU with Architecture > Kepler (or compute capability 3.0)
+4. NVIDIA drivers >= 418.81.07 (Note that older driver releases or branches are unsupported.)
 
 #### Removing nvidia-docker 1.0
 
@@ -32,35 +33,27 @@ You must stop and remove all containers started with nvidia-docker 1.0.
         $ sudo apt-get purge nvidia-docker
         ```
 
-#### Installing version 2.0
+#### Installing NVIDIA Container Toolkit
 
-Make sure you have installed the [NVIDIA driver](https://github.com/NVIDIA/nvidia-docker/wiki/Frequently-Asked-Questions#how-do-i-install-the-nvidia-driver).
-
-If you have a custom `/etc/docker/daemon.json`, the `nvidia-docker2` package might override it.
-
-Install the repository for your distribution by following the instructions here.
-
+Follow steps in [Installation Guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
       ```bash
-      $ wcurl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | \
-        sudo apt-key add -
-      $ distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-      $ curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | \
-        sudo tee /etc/apt/sources.list.d/nvidia-docker.list
-      $ sudo apt-get update
-      ```
+      # Install docker if you don't have it.
+      $ curl <https://get.docker.com> | sh && sudo systemctl --now enable docker
 
-Add Docker's official GPG key.
+      # Setup the stable repository and the GPG key.
+      $ distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
+            && curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add - \
+            && curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
 
-      ```bash
-      $ curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | \
-        sudo apt-key add -
-      ```
+      # Update and install 
+      sudo apt-get update
+      sudo apt-get install -y nvidia-docker2
 
-Install the `nvidia-docker2` package and reload the Docker daemon configuration:
+      # Restart docker
+      sudo systemctl restart docker
 
-      ```bash
-      $ sudo apt-get install nvidia-docker2
-      $ sudo pkill -SIGHUP dockerd
+      # Test if it is working 
+      sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
       ```
 
 ## Step 3: Creating the container
@@ -96,6 +89,8 @@ Every time you launch the Docker container, you'll need to compile the workspace
 
 # References
 
-* http://wiki.ros.org/docker/Tutorials/Docker
-* http://wiki.ros.org/docker/Tutorials/Hardware%20Acceleration
-* http://wiki.ros.org/docker/Tutorials/GUI
+This Repo was forked from [RoboticaUtnFrba](https://github.com/RoboticaUtnFrba/create_autonomy) repo. Special thanks to @eborghi10.
+
+* <http://wiki.ros.org/docker/Tutorials/Docker>
+* <http://wiki.ros.org/docker/Tutorials/Hardware%20Acceleration>
+* <http://wiki.ros.org/docker/Tutorials/GUI>

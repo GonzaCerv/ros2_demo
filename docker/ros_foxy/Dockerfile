@@ -1,4 +1,4 @@
-FROM ubuntu_bionic_focal
+FROM ubuntu_bionic
 LABEL maintainer="Emiliano Borghi"
 
 ENV ROS_DISTRO="foxy"
@@ -68,5 +68,3 @@ RUN mkdir -p ${WS_DIR}/src/
 
 WORKDIR ${WS_DIR}
 RUN rosdep update
-
-#install yaml-cpp

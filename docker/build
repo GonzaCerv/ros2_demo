@@ -10,12 +10,19 @@ import docker_utils as ut
 import os
 
 def main():
+    # Parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-r', '--ros', dest='ros_version', default='foxy')
+    args = parser.parse_args()
 
-    # Set image to compile
-    image_name = 'ros_foxy'
+    # Select image to compile
+    image_name = f'ros_{args.ros_version}'
+    if ut.is_nvidia():
+        image_name += '_nvidia'
 
     # Build selected image
-    command = 'cd {} && make {}'.format(os.path.join(ut.get_repo_root(), 'docker'), image_name)
+    path_to_docker = os.path.join(ut.get_repo_root(), 'docker')
+    command = f'cd {path_to_docker} && make {image_name}'
     ut.run_command(command)
 
 if __name__ == '__main__':

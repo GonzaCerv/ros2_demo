@@ -2,10 +2,18 @@
 DOCKER_ARGS?=
 USER_ID=$(shell id -u)
 
-.PHONY: ubuntu_bionic_focal
-ubuntu_bionic_focal:
-	docker build ${DOCKER_ARGS} --build-arg uid=$(USER_ID) -t ubuntu_bionic_focal ubuntu_bionic_focal
+.PHONY: ubuntu_bionic
+ubuntu_bionic:
+	docker build ${DOCKER_ARGS} --build-arg uid=$(USER_ID) -t ubuntu_bionic ubuntu_bionic
+
+.PHONY: ubuntu_bionic_nvidia
+ubuntu_bionic_nvidia:
+	docker build ${DOCKER_ARGS} --build-arg uid=$(USER_ID) -t ubuntu_bionic ubuntu_bionic
 
 .PHONY: ros_foxy
-ros_foxy: ubuntu_bionic_focal
+ros_foxy: ubuntu_bionic
 	docker build ${DOCKER_ARGS} -t ros_foxy ros_foxy
+
+.PHONY: ros_foxy_nvidia
+ros_foxy_nvidia: ubuntu_bionic_nvidia
+	docker build ${DOCKER_ARGS} -t ros_foxy_nvidia ros_foxy

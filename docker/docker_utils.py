@@ -32,9 +32,6 @@ def run_command(command):
 def get_repo_root():
     return subprocess.check_output('git rev-parse --show-toplevel'.split()).strip().decode()
 
-def get_repo_path():
-    return os.path.dirname(os.path.abspath(__file__))
-
 def get_uid():
     return os.getuid()
 
@@ -44,11 +41,11 @@ def get_user():
 def create_directory(directory):
     # Check existance before creating the directory
     if (os.path.isdir(directory)): return
-    run_command("mkdir -p {}".format(directory))
-    run_command("sudo chown {0}:{0} {1}".format(get_user(), directory))
+    run_command(f"mkdir -p {directory}")
+    run_command(f"sudo chown {get_user()}:{get_user()} {directory}")
 
 def mount_resource(device):
     # Mount hardware resource if it exists in the host
     if os.path.exists(device):
-        return "--volume=\"{0}:{0}:shared\"".format(device)
+        return f"--volume=\"{device}:{device}:shared\""
     return ""
