@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# Folder
+docker/__pycache__/
+.vscode
